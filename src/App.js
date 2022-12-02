@@ -1,25 +1,39 @@
-import logo from './logo.svg';
-import './App.css';
+import io from 'socket.io-client';
+import { LoginForm } from './components/LoginForm';
+import { Game } from './pages/Game';
+import { BASE_URL } from './config';
+import { useEffect, useState } from 'react';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+export const App = () => {
+    const [userData, setUserData] = useState(null);
+    const [socket, setSocket] = useState(null);
+    const [gamer, setGamer] = useState(null);
 
-export default App;
+    const connect = () => {
+        const socket = io.connect(BASE_URL);
+        setSocket(socket);
+    };
+
+    useEffect(() => {
+        connect();
+    }, []);
+
+    useEffect(() => {
+        if (userData && socket) {
+            const {roomCode, userName} = userData
+
+            socket.emit('joinRoom', {roomCode, userName});
+        }
+    }, [userData]);
+
+    return (
+        <>
+            <LoginForm
+                setUserData={setUserData}
+                setGamer={setGamer}
+                userData={userData}
+            />
+            {gamer && <Game userData={userData} socket={socket} />}
+        </>
+    );
+};
